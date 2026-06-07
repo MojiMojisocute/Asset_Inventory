@@ -1,90 +1,137 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Device Management</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: #f5f5f4; color: #1c1c1a; }
-    header { background: #fff; border-bottom: 1px solid #e5e5e3; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-    header h1 { font-size: 15px; font-weight: 500; }
-    main { padding: 32px; }
-    section { background: #fff; border: 1px solid #e5e5e3; border-radius: 10px; overflow: hidden; }
-    .section-header { padding: 14px 20px; border-bottom: 1px solid #e5e5e3; display: flex; align-items: center; gap: 10px; }
-    .section-header h2 { font-size: 14px; font-weight: 500; }
-    .count { font-size: 12px; color: #888; background: #f5f5f4; padding: 2px 8px; border-radius: 99px; border: 1px solid #e5e5e3; }
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; padding: 10px 20px; font-size: 12px; font-weight: 500; color: #888; border-bottom: 1px solid #e5e5e3; background: #fafaf9; white-space: nowrap; }
-    td { padding: 10px 20px; border-bottom: 1px solid #f0f0ee; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #fafaf9; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-    .badge-green { background: #e8f5e9; color: #2e7d32; }
-    .badge-red   { background: #fdecea; color: #b71c1c; }
-    .badge-amber { background: #fff8e1; color: #e65100; }
-    .badge-gray  { background: #f0f0ee; color: #555; }
-    .null { color: #ccc; }
-    .empty { padding: 48px; text-align: center; color: #bbb; font-size: 13px; }
-    .mono { font-family: 'SF Mono', monospace; font-size: 12px; }
-  </style>
+  <title>Device Management – Overview</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
 
-<header>
-  <h1>Device Management</h1>
-</header>
+<div class="layout">
+  {% include 'partials/sidebar.html' %}
 
-<main>
-  <section>
-    <div class="section-header">
-      <h2>Laptops — current assignments</h2>
-      <span class="count">{{ rows|length }}</span>
-    </div>
+  <div class="content">
+    <header>
+      <span class="logo">Device Management</span>
+      <span class="meta" id="header-count">{{ rows|length }} assignments</span>
+    </header>
 
-    {% if rows %}
-    <table>
-      <thead>
-        <tr>
-          <th>ชื่อผู้ใช้</th>
-          <th>Department</th>
-          <th>Hostname</th>
-          <th>Brand</th>
-          <th>Model</th>
-          <th>State</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for a in rows %}
-        <tr>
-          <td>{{ a.employee.name }}</td>
-          <td>{{ a.employee.department or '<span class="null">—</span>'|safe }}</td>
-          <td class="mono">{{ a.laptop.hostname or '<span class="null">—</span>'|safe }}</td>
-          <td>{{ a.laptop.brand or '<span class="null">—</span>'|safe }}</td>
-          <td>{{ a.laptop.model or '<span class="null">—</span>'|safe }}</td>
-          <td>
-            {% if a.laptop.state == 'Good' %}
-              <span class="badge badge-green">Good</span>
-            {% elif a.laptop.state == 'Damaged' %}
-              <span class="badge badge-red">Damaged</span>
-            {% elif a.laptop.state == 'Old' %}
-              <span class="badge badge-amber">Old</span>
-            {% elif a.laptop.state %}
-              <span class="badge badge-gray">{{ a.laptop.state }}</span>
-            {% else %}
-              <span class="null">—</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="empty">ยังไม่มีข้อมูล</div>
-    {% endif %}
+    <main>
+      <div class="card">
+        <div class="card-header">
+          <h2>Laptop Assignments</h2>
+          <span class="pill" id="count">{{ rows|length }}</span>
+        </div>
 
-  </section>
-</main>
+        <div class="filters">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="f-name" placeholder="Name / Hostname">
+          </div>
 
+          <div class="select-wrap">
+            <select id="f-dept">
+              <option value="">All Departments</option>
+              {% set depts = [] %}
+              {% for a in rows %}{% if a.employee.department and a.employee.department not in depts %}{% set _ = depts.append(a.employee.department) %}{% endif %}{% endfor %}
+              {% for d in depts | sort %}<option>{{ d }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-type">
+              <option value="">All Types</option>
+              <option>Permanent</option>
+              <option>Intern</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-brand">
+              <option value="">All Brands</option>
+              {% set brands = [] %}
+              {% for a in rows %}{% if a.laptop.brand and a.laptop.brand not in brands %}{% set _ = brands.append(a.laptop.brand) %}{% endif %}{% endfor %}
+              {% for b in brands | sort %}<option>{{ b }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-model">
+              <option value="">All Models</option>
+              {% set models = [] %}
+              {% for a in rows %}{% if a.laptop.model and a.laptop.model not in models %}{% set _ = models.append(a.laptop.model) %}{% endif %}{% endfor %}
+              {% for m in models | sort %}<option>{{ m }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <button class="btn-reset" onclick="resetFilters()">Reset</button>
+        </div>
+
+        {% if rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Type</th>
+              <th>Hostname</th>
+              <th>Brand</th>
+              <th>Model</th>
+              <th>State</th>
+              <th>Vendor</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            {% for a in rows %}
+            <tr
+              data-name="{{ a.employee.name | lower }}"
+              data-dept="{{ a.employee.department or '' }}"
+              data-type="{{ a.employee.employee_type or '' }}"
+              data-hostname="{{ a.laptop.device_number | lower }}"
+              data-brand="{{ a.laptop.brand or '' }}"
+              data-model="{{ a.laptop.model or '' }}"
+            >
+              <td class="name">{{ a.employee.name }}</td>
+              <td class="muted">{{ a.employee.department or '' }}</td>
+              <td class="muted">{{ a.employee.employee_type or '' }}</td>
+              <td class="mono">{{ a.laptop.device_number }}</td>
+              <td>{{ a.laptop.brand or '' }}</td>
+              <td>{{ a.laptop.model or '' }}</td>
+              <td>
+                {% if a.laptop.state == 'In_use' %}
+                  <span class="badge badge-green">In use</span>
+                {% elif a.laptop.state == 'Ready' %}
+                  <span class="badge badge-blue">Ready</span>
+                {% elif a.laptop.state == 'Damaged' %}
+                  <span class="badge badge-red">Damaged</span>
+                {% else %}
+                  <span class="badge badge-gray">{{ a.laptop.state }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if a.laptop.is_borrowed %}
+                  <span class="badge badge-amber">Borrowed</span>
+                {% else %}
+                  <span class="null">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div id="no-results" style="display:none" class="empty">No results found</div>
+        {% else %}
+        <div class="empty">No data available</div>
+        {% endif %}
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

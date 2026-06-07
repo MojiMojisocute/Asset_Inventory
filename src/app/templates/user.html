@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users — Device Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/user.css') }}">
+</head>
+<body>
+
+<div class="layout">
+  {% include 'partials/sidebar.html' %}
+
+  <div class="content">
+    <header>
+      <span class="logo">Device Management</span>
+    </header>
+
+    <main>
+      <div class="card">
+
+        <div class="card-header">
+          <h2>All Users</h2>
+          <span class="pill" id="count">{{ employees|length }}</span>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="f-search" placeholder="Search by name, department...">
+          </div>
+
+          <div class="filter-panel-wrap">
+            <button class="btn-filter" id="btn-filter">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filters
+              <span class="filter-badge" id="filter-badge" style="display:none"></span>
+            </button>
+
+            <div class="filter-panel" id="filter-panel">
+              <div class="filter-panel-inner">
+                <div class="filter-panel-sidebar">
+                  <button class="filter-tab active" data-tab="status" onclick="showTab('status')">Status</button>
+                  <button class="filter-tab" data-tab="type" onclick="showTab('type')">Type</button>
+                  <button class="filter-tab" data-tab="dept" onclick="showTab('dept')">Department</button>
+                </div>
+
+                <div class="filter-panel-body">
+                  <div class="filter-section active" id="tab-status">
+                    <div class="filter-section-header">
+                      <span>Status</span>
+                      <button class="btn-clear-filter" onclick="clearSection('status')">Clear filter</button>
+                    </div>
+                    <label class="checkbox-item"><input type="checkbox" name="status" value="Active"> Active</label>
+                    <label class="checkbox-item"><input type="checkbox" name="status" value="Onboard"> Onboard</label>
+                    <label class="checkbox-item"><input type="checkbox" name="status" value="Offboard"> Offboard</label>
+                  </div>
+
+                  <div class="filter-section" id="tab-type">
+                    <div class="filter-section-header">
+                      <span>Type</span>
+                      <button class="btn-clear-filter" onclick="clearSection('type')">Clear filter</button>
+                    </div>
+                    <label class="checkbox-item"><input type="checkbox" name="type" value="Permanent"> Permanent</label>
+                    <label class="checkbox-item"><input type="checkbox" name="type" value="Intern"> Intern</label>
+                  </div>
+
+                  <div class="filter-section" id="tab-dept">
+                    <div class="filter-section-header">
+                      <span>Department</span>
+                      <button class="btn-clear-filter" onclick="clearSection('dept')">Clear filter</button>
+                    </div>
+                    {% set depts = [] %}
+                    {% for e in employees %}{% if e.department and e.department.strip() not in depts %}{% set _ = depts.append(e.department.strip()) %}{% endif %}{% endfor %}
+                    {% for d in depts|sort %}
+                    <label class="checkbox-item"><input type="checkbox" name="dept" value="{{ d }}"> {{ d }}</label>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="filter-panel-footer">
+                <button class="btn-clear-all" onclick="clearAll()">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          {% if employees %}
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Onboard Date</th>
+                <th>Offboard Date</th>
+                <th>Duration</th>
+                <th>Laptop</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              {% for e in employees %}
+              {% set assignment = e.device_assignments | selectattr('laptop', 'ne', none) | list | first %}
+              <tr
+                data-name="{{ e.name | lower }}"
+                data-dept="{{ e.department.strip() if e.department else '' }}"
+                data-type="{{ e.employee_type or '' }}"
+                data-status="{{ e.status or '' }}"
+              >
+                <td class="fw500">{{ e.name }}</td>
+                <td class="muted">{{ e.department or '<span class="null">—</span>'|safe }}</td>
+                <td class="muted">{{ e.employee_type or '<span class="null">—</span>'|safe }}</td>
+                <td>
+                  {% if e.status == 'Active' %}<span class="badge badge-green">Active</span>
+                  {% elif e.status == 'Offboard' %}<span class="badge badge-gray">Offboard</span>
+                  {% elif e.status == 'Onboard' %}<span class="badge badge-blue">Onboard</span>
+                  {% else %}<span class="null">—</span>{% endif %}
+                </td>
+                <td class="muted">{{ e.onboard_date or '<span class="null">—</span>'|safe }}</td>
+                <td class="muted">{{ e.offboard_date or '<span class="null">—</span>'|safe }}</td>
+                <td class="muted">{% if e.duration_months %}{{ e.duration_months }} mo{% else %}<span class="null">—</span>{% endif %}</td>
+                <td class="mono">{% if assignment %}{{ assignment.laptop.device_number }}{% else %}<span class="null">—</span>{% endif %}</td>
+                <td class="muted">{{ e.remarks or '<span class="null">—</span>'|safe }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div id="no-results" style="display:none" class="empty">No results found</div>
+          {% else %}
+          <div class="empty">No users available</div>
+          {% endif %}
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user.js') }}"></script>
+</body>
+</html>

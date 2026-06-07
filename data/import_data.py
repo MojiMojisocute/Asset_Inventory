@@ -3,8 +3,8 @@ import sqlite3
 from datetime import datetime, date
 
 DB_PATH = 'src/instance/device_management.db'
-EMPLOYEE_FILE = 'Employee.xlsx'
-LAPTOP_FILE   = 'Laptops.xlsx'
+EMPLOYEE_FILE = 'data/Employee.xlsx'
+LAPTOP_FILE   = 'data/Laptops.xlsx'
 
 def parse_date(val):
     if pd.isna(val) or str(val).strip().lower() in ('null', ''):
@@ -23,8 +23,16 @@ def parse_date(val):
 
 def clean(val):
     if pd.isna(val) or str(val).strip().lower() in ('null', ''):
-        return None
+         return None
     return str(val).strip()
+
+def parse_int(val):
+    if pd.isna(val) or str(val).strip().lower() in ('null', ''):
+        return None
+    try:
+        return int(val)
+    except:
+        return None
 
 def bool_col(val):
     if pd.isna(val):
@@ -82,19 +90,20 @@ CREATE TABLE IF NOT EXISTS device_assignments (
 df_emp = pd.read_excel(EMPLOYEE_FILE)
 df_emp = df_emp[df_emp['name'].notna() & (df_emp['name'].astype(str).str.strip() != '')]
 
+cur.execute("DELETE FROM device_assignments")
 cur.execute("DELETE FROM employees")
 for _, r in df_emp.iterrows():
     cur.execute("""
         INSERT INTO employees (id, name, employee_type, department, onboard_date, offboard_date, duration_months, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        int(r['id']) if pd.notna(r['id']) else None,
+        parse_int(r['id']),
         clean(r['name']),
         clean(r.get('employee_type')),
         clean(r.get('department')),
         parse_date(r.get('onboard_date')),
         parse_date(r.get('offboard_date')),
-        int(r['duration_months']) if pd.notna(r.get('duration_months')) else None,
+        parse_int(r.get('duration_months')),
         clean(r.get('status')),
     ))
 
@@ -109,7 +118,7 @@ for _, r in df_lap.iterrows():
                              remarks, vendor_borrow_date, vendor_return_date)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        int(r['id']),
+        parse_int(r['id']),
         clean(r['device_number']),
         clean(r.get('product_serial_no')),
         clean(r.get('brand')),
@@ -127,9 +136,10 @@ for _, r in df_lap.iterrows():
 print(f"Imported {len(df_lap)} laptops")
 
 df_emp2 = pd.read_excel(EMPLOYEE_FILE)
+df_emp2 = df_emp2[df_emp2['name'].notna() & (df_emp2['name'].astype(str).str.strip() != '')]
 df_emp2 = df_emp2[df_emp2['device_number'].notna() & (df_emp2['device_number'].astype(str).str.strip().str.lower() != 'null')]
 
-cur.execute("DELETE FROM device_assignments")
+count = 0
 for _, r in df_emp2.iterrows():
     serial = clean(r['device_number'])
     cur.execute("SELECT id FROM laptops WHERE product_serial_no = ?", (serial,))
@@ -142,9 +152,10 @@ for _, r in df_emp2.iterrows():
     cur.execute("""
         INSERT INTO device_assignments (employee_id, laptop_id, assigned_date, return_date)
         VALUES (?, ?, ?, ?)
-    """, (int(r['id']), lap[0], assigned, return_date))
+    """, (parse_int(r['id']), lap[0], assigned, return_date))
+    count += 1
 
-print(f"Imported {cur.rowcount and 'assignments done'}")
+print(f"Imported {count} assignments")
 
 con.commit()
 con.close()

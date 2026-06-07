@@ -1,0 +1,142 @@
+.sidebar {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid #e5e5e3;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1c1c1a;
+  border-bottom: 1px solid #e5e5e3;
+  letter-spacing: -0.01em;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 2px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: #555;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link svg {
+  flex-shrink: 0;
+  color: #999;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { background: #f5f5f4; color: #1c1c1a; }
+.nav-link:hover svg { color: #555; }
+
+.nav-link.active { background: #f0f0ef; color: #1c1c1a; font-weight: 500; }
+.nav-link.active svg { color: #444; }
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: #555;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-group-btn:hover { background: #f5f5f4; color: #1c1c1a; }
+.nav-group-btn:hover .nav-group-left svg { color: #555; }
+
+.nav-group-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nav-group-left svg {
+  flex-shrink: 0;
+  color: #999;
+  transition: color 0.15s;
+}
+
+.chevron {
+  color: #bbb;
+  transition: transform 0.2s ease, color 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-group.open .chevron {
+  transform: rotate(180deg);
+  color: #999;
+}
+
+.nav-group-children {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  height: 0;
+}
+
+.nav-child {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 13px;
+  color: #777;
+  padding: 7px 12px 7px 36px;
+  border-radius: 6px;
+  position: relative;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-child::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e5e3;
+}
+
+.nav-child:hover { background: #f5f5f4; color: #1c1c1a; }
+.nav-child.active { color: #1c1c1a; font-weight: 500; }
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laptops — Device Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/laptop.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+</head>
+<body>
+
+<div class="layout">
+  {% include 'partials/sidebar.html' %}
+
+  <div class="content">
+    <header>
+      <span class="logo">Device Management</span>
+    </header>
+
+    <main>
+      <div class="card">
+
+        <div class="card-header">
+          <h2>All Laptops</h2>
+          <span class="pill" id="count">{{ laptops|length }}</span>
+        </div>
+
+        <div class="filters">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="f-search" placeholder="Serial / Hostname">
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-brand">
+              <option value="">All Brands</option>
+              {% set brands = [] %}
+              {% for l in laptops %}{% if l.brand and l.brand not in brands %}{% set _ = brands.append(l.brand) %}{% endif %}{% endfor %}
+              {% for b in brands|sort %}<option>{{ b }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-model">
+              <option value="">All Models</option>
+              {% set models = [] %}
+              {% for l in laptops %}{% if l.model and l.model not in models %}{% set _ = models.append(l.model) %}{% endif %}{% endfor %}
+              {% for m in models|sort %}<option>{{ m }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-state">
+              <option value="">All States</option>
+              <option>In_use</option>
+              <option>Ready</option>
+              <option>Damaged</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <select id="f-vendor">
+              <option value="">All</option>
+              <option value="yes">Vendor Borrowed</option>
+              <option value="no">Owned</option>
+            </select>
+          </div>
+
+          <button class="btn-reset" onclick="resetFilters()">Reset</button>
+        </div>
+
+        {% if laptops %}
+        <table>
+          <thead>
+            <tr>
+              <th>Hostname</th>
+              <th>Serial No.</th>
+              <th>Brand</th>
+              <th>Model</th>
+              <th>State</th>
+              <th>Vendor</th>
+              <th>Purchase Date</th>
+              <th>Warranty End</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            {% for l in laptops %}
+            <tr
+              data-brand="{{ l.brand or '' }}"
+              data-model="{{ l.model or '' }}"
+              data-state="{{ l.state or '' }}"
+              data-vendor="{{ 'yes' if l.is_borrowed else 'no' }}"
+            >
+              <td class="mono fw500">{{ l.device_number }}</td>
+              <td class="mono">{{ l.product_serial_no or '<span class="null">—</span>'|safe }}</td>
+              <td>{{ l.brand or '<span class="null">—</span>'|safe }}</td>
+              <td>{{ l.model or '<span class="null">—</span>'|safe }}</td>
+              <td>
+                {% if l.state == 'In_use' %}
+                  <span class="badge badge-green">In use</span>
+                {% elif l.state == 'Ready' %}
+                  <span class="badge badge-blue">Ready</span>
+                {% elif l.state == 'Damaged' %}
+                  <span class="badge badge-red">Damaged</span>
+                {% elif l.state %}
+                  <span class="badge badge-gray">{{ l.state }}</span>
+                {% else %}
+                  <span class="null">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if l.is_borrowed %}
+                  <span class="badge badge-amber">Borrowed</span>
+                {% else %}
+                  <span class="null">—</span>
+                {% endif %}
+              </td>
+              <td class="muted">{{ l.purchase_date or '<span class="null">—</span>'|safe }}</td>
+              <td class="muted">{{ l.warranty_end_date or '<span class="null">—</span>'|safe }}</td>
+              <td class="muted">{{ l.remarks or '<span class="null">—</span>'|safe }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div id="no-results" style="display:none" class="empty">No results found</div>
+        {% else %}
+        <div class="empty">No laptops available</div>
+        {% endif %}
+
+      </div>
+    </main>  
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/laptop.js') }}"></script>
+</body>
+</html>

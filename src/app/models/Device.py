@@ -27,7 +27,7 @@ class Device(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    assignments = db.relationship('DeviceAssignment', backref='device', lazy=True)
+#    assignments = db.relationship('DeviceAssignment', backref='device', lazy=True)
 
     @property
     def current_user(self):

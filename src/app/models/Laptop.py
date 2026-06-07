@@ -38,10 +38,16 @@ class Laptop(db.Model):
     @property
     def current_user(self):
         from app.models.Device_assignment import DeviceAssignment
-        assignment = DeviceAssignment.query.filter_by(
-            laptop_id=self.id,
-            return_date=None
-        ).first()
+        from app.models.Employee import Employee
+        assignment = (
+            DeviceAssignment.query
+            .join(DeviceAssignment.employee)
+            .filter(
+                DeviceAssignment.laptop_id == self.id,
+                Employee.status != 'Offboard'
+            )
+            .first()
+        )
         return assignment.employee if assignment else None
 
     def __repr__(self):
